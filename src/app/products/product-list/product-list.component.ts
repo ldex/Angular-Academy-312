@@ -20,7 +20,9 @@ export class ProductListComponent implements OnInit {
 
   products$: Observable<Product[]>;
   productsNumber$: Observable<number>;
+  productsTotalNumber$: Observable<number>;
   mostExpensiveProduct$: Observable<Product>;
+  isLastPage$: Observable<boolean>;
 
   errorMessage;
 
@@ -73,7 +75,10 @@ export class ProductListComponent implements OnInit {
 
     this.products$ = this
                       .productService
-                      .products$;
+                      .products$
+                      .pipe(
+                        filter(products => products.length > 0)
+                      );
 
     this.productsNumber$ = this
                             .products$
@@ -82,13 +87,28 @@ export class ProductListComponent implements OnInit {
                               startWith(0)
                             );
 
+    this.productsTotalNumber$ = this
+                              .productService
+                              .productsTotalNumber$;
+
+    this.isLastPage$ = combineLatest([this.productsNumber$, this.productsTotalNumber$])
+      .pipe(
+        map(([productsNumber, productsTotalNumber]) =>
+          productsNumber >= productsTotalNumber
+        )
+      );
+
     this.mostExpensiveProduct$ = this
                                     .productService
                                     .mostExpensiveProduct$;
   }
 
   refresh() {
-    this.productService.initProducts();
-    this.router.navigateByUrl('/products'); // Self route navigation
+    // Reset de la liste
+    this.productService.resetList();
+    // Reset de la pagination
+    this.start = 0;
+    this.end = this.pageSize;
+    this.currentPage = 1;
   }
 }

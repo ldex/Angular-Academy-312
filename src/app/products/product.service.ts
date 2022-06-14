@@ -12,12 +12,28 @@ export class ProductService {
   private baseUrl = 'https://storerestservice.azurewebsites.net/api/products/';
   private productsSubject = new BehaviorSubject<Product[]>([]);
   products$: Observable<Product[]> = this.productsSubject.asObservable();
+  productsTotalNumber$: Observable<number>;
   mostExpensiveProduct$: Observable<Product>;
   productsToLoad = 10;
 
   constructor(private http: HttpClient) {
     this.initProducts();
     this.initMostExpensiveProduct();
+    this.initproductsTotalNumber();
+  }
+
+  resetList() {
+    this.productsSubject.next([]);
+    this.initProducts();
+  }
+
+  private initproductsTotalNumber() {
+    this.productsTotalNumber$ = this
+                                .http
+                                .get<number>(this.baseUrl + "count")
+                                .pipe(
+                                  shareReplay()
+                                );
   }
 
   private initMostExpensiveProduct() {
